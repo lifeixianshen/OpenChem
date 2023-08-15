@@ -57,14 +57,11 @@ number2atom = {i: v for v, i in atom2number.items()}
 
 def get_atomic_attributes(atom):
     atomic_num = atom.GetAtomicNum()
-    attr_dict = dict(atom_element=atomic_num)
-    return attr_dict
+    return dict(atom_element=atomic_num)
 
 
 def get_edge_attributes(bond):
-    attr_dict = dict()
-    attr_dict['bond_type'] = bond.GetBondTypeAsDouble()
-    return attr_dict
+    return {'bond_type': bond.GetBondTypeAsDouble()}
 
 
 node_attributes = dict(atom_element=Attribute('node', 'atom_element', one_hot=False), )

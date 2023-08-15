@@ -27,10 +27,7 @@ class CNNEncoder(OpenChemEncoder):
         self.dropouts = nn.ModuleList()
         out_channels = self.encoder_dim
         for i in range(len(kernel_sizes)):
-            if i == 0:
-                in_channels = self.input_size
-            else:
-                in_channels = self.encoder_dim
+            in_channels = self.input_size if i == 0 else self.encoder_dim
             self.dropouts.append(nn.Dropout(self.dropout))
             kernel_size = kernel_sizes[i]
             self.convolutions.append(ConvBNReLU(in_channels=in_channels,

@@ -22,9 +22,6 @@ class SiameseDataset(Dataset):
                                           **head1_arguments)
         elif head1_type == "graphs":
             raise NotImplementedError()
-            head1_dataset = GraphDataset(filename=filename,
-                                         cols_to_read=[0, 2],
-                                         **head1_arguments)
         else:
             raise ArgumentError
         if head2_type == "smiles":
@@ -33,9 +30,6 @@ class SiameseDataset(Dataset):
                                           **head2_arguments)
         elif head2_type == "graphs":
             raise NotImplementedError()
-            head2_dataset = GraphDataset(filename=filename,
-                                         cols_to_read=[1, 2],
-                                         **head2_arguments)
         else:
             raise ArgumentError
         self.head1_dataset = head1_dataset
@@ -49,8 +43,9 @@ class SiameseDataset(Dataset):
     def __getitem__(self, index):
         head1_sample = self.head1_dataset[index]
         head2_sample = self.head2_dataset[index]
-        sample = {'head1': head1_sample,
-                  'head2': head2_sample,
-                  'labels': self.target[index]}
-        return sample
+        return {
+            'head1': head1_sample,
+            'head2': head2_sample,
+            'labels': self.target[index],
+        }
 

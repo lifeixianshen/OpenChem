@@ -23,11 +23,9 @@ class RandomForestQSAR(object):
         self.model = []
         self.model_type = model_type
         if self.model_type == 'classifier':
-            for i in range(n_ensemble):
-                self.model.append(RFC(n_estimators=n_estimators))
+            self.model.extend(RFC(n_estimators=n_estimators) for _ in range(n_ensemble))
         elif self.model_type == 'regressor':
-            for i in range(n_ensemble):
-                self.model.append(RFR(n_estimators=n_estimators))
+            self.model.extend(RFR(n_estimators=n_estimators) for _ in range(n_ensemble))
         else:
             raise ValueError('invalid value for argument')
         self.feature_type = feature_type
@@ -41,7 +39,7 @@ class RandomForestQSAR(object):
             m = joblib.load(path + str(i) + '.pkl')
             self.model.append(m)
         if self.feature_type == 'descriptors':
-            arr = np.load(path + 'desc_mean.npy', 'rb')
+            arr = np.load(f'{path}desc_mean.npy', 'rb')
             self.desc_mean = arr
 
     def save_model(self, path):
@@ -49,7 +47,7 @@ class RandomForestQSAR(object):
         for i in range(self.n_ensemble):
             joblib.dump(self.model[i], path + str(i) + '.pkl')
         if self.feature_type == 'descriptors':
-            np.save(path + 'desc_mean.npy', self.desc_mean)
+            np.save(f'{path}desc_mean.npy', self.desc_mean)
 
     def fit_model(self, data):
         eval_metrics = []
@@ -123,11 +121,9 @@ class SVMQSAR(object):
         self.model = []
         self.model_type = model_type
         if self.model_type == 'classifier':
-            for i in range(n_ensemble):
-                self.model.append(SVC())
+            self.model.extend(SVC() for _ in range(n_ensemble))
         elif self.model_type == 'regressor':
-            for i in range(n_ensemble):
-                self.model.append(SVR())
+            self.model.extend(SVR() for _ in range(n_ensemble))
         else:
             raise ValueError('invalid value for argument')
 
@@ -178,8 +174,7 @@ class SVMQSAR(object):
         clean_fps = np.array(clean_fps)
         prediction = []
         if len(clean_fps) > 0:
-            for m in self.model:
-                prediction.append(m.predict(clean_fps))
+            prediction.extend(m.predict(clean_fps) for m in self.model)
             prediction = np.array(prediction)
             if average:
                 prediction = prediction.mean(axis=0)

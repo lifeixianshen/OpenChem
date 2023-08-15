@@ -34,11 +34,7 @@ params = pickle.load(open('logs/rl_start/params.pkl', 'rb'))
 
 model = Smiles2Label(params)
 weights = torch.load('./logs/rl_start/checkpoint/epoch_29', map_location=torch.device("cpu"))
-new_weights = {}
-
-for key in weights.keys():
-    new_weights[key[7:]] = weights[key]
-
+new_weights = {key[7:]: weights[key] for key in weights.keys()}
 model.load_state_dict(new_weights)
 model = model.to(device='cuda')
 
@@ -95,14 +91,11 @@ number2atom = {i: v for v, i in atom2number.items()}
 
 def get_atomic_attributes(atom):
     atomic_num = atom.GetAtomicNum()
-    attr_dict = dict(atom_element=atomic_num)
-    return attr_dict
+    return dict(atom_element=atomic_num)
 
 
 def get_edge_attributes(bond):
-    attr_dict = dict()
-    attr_dict['bond_type'] = bond.GetBondTypeAsDouble()
-    return attr_dict
+    return {'bond_type': bond.GetBondTypeAsDouble()}
 
 
 node_attributes = dict(atom_element=Attribute('node', 'atom_element', one_hot=False), )
@@ -151,10 +144,7 @@ if num_node_classes > 2:
 
 class DummyCriterion(object):
     def __call__(self, inp, out):
-        if isinstance(inp, list):
-            return 0.0
-        else:
-            return inp
+        return 0.0 if isinstance(inp, list) else inp
 
     def cuda(self):
         return self

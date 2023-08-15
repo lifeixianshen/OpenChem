@@ -24,7 +24,7 @@ reactant1 = data[0]
 reactant2 = data[1]
 labels = np.array(data[2], dtype="float").reshape(-1, 1)
 
-reactants = [reactant1[i] + " " + reactant2[i] for i in range(len(reactant2))]
+reactants = [f"{reactant1[i]} {reactant2[i]}" for i in range(len(reactant2))]
 
 from openchem.data.utils import get_tokens
 tokens, _, _ = get_tokens(reactants)

@@ -58,12 +58,10 @@ class SiameseModel(OpenChemModel):
         if self.Head1Embedding is not None:
             head2_input = head2[0]
             head2_length = head2[1]
-        else:
-            head2_input = head2
-        if self.Head1Embedding is not None:
             head1_embedded = self.Head1Embedding(head1_input)
             head1_embedded = [head1_embedded, head1_length]
         else:
+            head2_input = head2
             head1_embedded = head1_input
         if self.Head2Embedding is not None:
             head2_embedded = self.Head2Embedding(head2_input)

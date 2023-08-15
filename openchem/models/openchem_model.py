@@ -106,9 +106,7 @@ def train_step(model, optimizer, criterion, inp, target):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        has_module = False
-        if hasattr(model, 'module'):
-            has_module = True
+        has_module = bool(hasattr(model, 'module'))
         if has_module:
             use_clip_grad = model.module.use_clip_grad
             max_grad_norm = model.module.max_grad_norm
@@ -135,9 +133,7 @@ def fit(model, scheduler, train_loader, optimizer, criterion, params, eval=False
     scheduler = scheduler.scheduler
     all_losses = []
     val_losses = []
-    has_module = False
-    if hasattr(model, 'module'):
-        has_module = True
+    has_module = bool(hasattr(model, 'module'))
     world_size = comm.get_world_size()
 
     for epoch in tqdm(range(cur_epoch, n_epochs + cur_epoch)):
@@ -190,25 +186,25 @@ def fit(model, scheduler, train_loader, optimizer, criterion, params, eval=False
                     tag = tag.replace('.', '/')
                     if torch.std(value).item() < 1e-3 or \
                             torch.isnan(torch.std(value)).item():
-                        textlogger.warning("Warning: {} has zero variance ".format(tag) + "(i.e. constant vector)")
+                        textlogger.warning(f"Warning: {tag} has zero variance (i.e. constant vector)")
                     else:
                         log_value = value.detach().cpu().numpy()
                         writer.add_histogram(tag, log_value, epoch + 1)
                         #logger.histo_summary(
                         #    tag, log_value, epoch + 1)
                         if value.grad is None:
-                            print("Warning: {} grad is undefined".format(tag))
+                            print(f"Warning: {tag} grad is undefined")
                         else:
                             log_value_grad = value.grad.detach().cpu().numpy()
-                            writer.add_histogram(tag + "/grad", log_value_grad, epoch + 1)
+                            writer.add_histogram(f"{tag}/grad", log_value_grad, epoch + 1)
 
         if epoch % save_every == 0 and comm.is_main_process():
-            torch.save(model.state_dict(), logdir + '/checkpoint/epoch_' + str(epoch))
+            torch.save(model.state_dict(), f'{logdir}/checkpoint/epoch_{str(epoch)}')
 
         loss_total = 0
         n_batches = 0
-        if scheduler is not None:
-            if not schedule_by_iter:
+        if not schedule_by_iter:
+            if scheduler is not None:
                 # steps are in epochs
                 scheduler.step()
 
@@ -223,9 +219,7 @@ def evaluate(model, data_loader, criterion=None, epoch=None):
     start = time.time()
     prediction = []
     ground_truth = []
-    has_module = False
-    if hasattr(model, 'module'):
-        has_module = True
+    has_module = bool(hasattr(model, 'module'))
     if has_module:
         task = model.module.task
         eval_metrics = model.module.eval_metrics
@@ -263,20 +257,20 @@ def evaluate(model, data_loader, criterion=None, epoch=None):
         ground_truth += list(batch_target)
         loss_total += loss
         n_batches += 1
-    
+
 
     cur_loss = loss_total / n_batches
     if task == 'classification':
         prediction = np.argmax(prediction, axis=1)
-    
+
     metrics = calculate_metrics(prediction, ground_truth, eval_metrics)
     metrics = np.mean(metrics)
 
     if task == "graph_generation":
-        f = open(logdir + "/debug_smiles_epoch_" + str(epoch) + ".smi", "w")
+        f = open(f"{logdir}/debug_smiles_epoch_{str(epoch)}.smi", "w")
         if isinstance(metrics, list) and len(metrics) == len(prediction):
             for i in range(len(prediction)):
-                f.writelines(str(prediction[i]) + "," + str(metrics[i]) + "\n")
+                f.writelines(f"{str(prediction[i])},{str(metrics[i])}" + "\n")
         else:
             for i in range(len(prediction)):
                 f.writelines(str(prediction[i]) + "\n")
@@ -294,9 +288,7 @@ def predict(model, data_loader, eval=True):
     start = time.time()
     prediction = []
     samples = []
-    has_module = False
-    if hasattr(model, 'module'):
-        has_module = True
+    has_module = bool(hasattr(model, 'module'))
     if has_module:
         task = model.module.task
         logdir = model.module.logdir
@@ -327,7 +319,7 @@ def predict(model, data_loader, eval=True):
 
     if task == 'classification':
         prediction = np.argmax(prediction, axis=1)
-    f = open(logdir + "/predictions.txt", "w")
+    f = open(f"{logdir}/predictions.txt", "w")
     assert len(prediction) == len(samples)
 
     if comm.is_main_process():
@@ -338,11 +330,11 @@ def predict(model, data_loader, eval=True):
                 tmp = tmp[:tmp.index(" ")]
                 to_write = [str(pred) for pred in prediction[i]]
                 to_write = ",".join(to_write)
-            f.writelines(tmp + "," + to_write + "\n")
+            f.writelines(f"{tmp},{to_write}" + "\n")
         f.close()
 
     if comm.is_main_process():
-        textlogger.info('Predictions saved to ' + logdir + "/predictions.txt")
+        textlogger.info(f'Predictions saved to {logdir}/predictions.txt')
         textlogger.info(
             'PREDICTION: [Time: %s, Number of samples: %d]' % (time_since(start), len(prediction))
         )

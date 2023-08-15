@@ -24,7 +24,7 @@ labels = np.array(data[1][1:], dtype='float').reshape(-1)
 
 from openchem.data.utils import get_tokens
 tokens, _, _ = get_tokens(smiles)
-tokens = tokens + ' '
+tokens = f'{tokens} '
 
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(smiles, labels,
@@ -42,8 +42,7 @@ y_test = (y_test - train_mean) / train_std
 
 def rmse_tmelt(target, predicted, std=train_std):
     mse = mean_squared_error(target, predicted)
-    rmse = np.sqrt(mse) * std
-    return rmse
+    return np.sqrt(mse) * std
 
 from openchem.data.utils import save_smiles_property_file
 save_smiles_property_file('./benchmark_datasets/melt_temp/train.smi',

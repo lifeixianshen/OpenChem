@@ -30,14 +30,8 @@ def reward_penalized_log_p(smiles, return_mean=True):
     cycle_score = []
     for mol in mols:
         cycle_list = nx.cycle_basis(nx.Graph(Chem.rdmolops.GetAdjacencyMatrix(mol)))
-        if len(cycle_list) == 0:
-            cycle_length = 0
-        else:
-            cycle_length = max([len(j) for j in cycle_list])
-        if cycle_length <= 6:
-            cycle_length = 0
-        else:
-            cycle_length = cycle_length - 6
+        cycle_length = 0 if len(cycle_list) == 0 else max(len(j) for j in cycle_list)
+        cycle_length = 0 if cycle_length <= 6 else cycle_length - 6
         cycle_score.append(-cycle_length)
 
     cycle_score = np.array(cycle_score)
@@ -46,10 +40,7 @@ def reward_penalized_log_p(smiles, return_mean=True):
     normalized_SA = (SA - SA_mean) / SA_std
     normalized_cycle = (cycle_score - cycle_mean) / cycle_std
     score = list(normalized_log_p + normalized_SA + normalized_cycle)
-    if return_mean:
-        return np.mean(score)
-    else:
-        return score
+    return np.mean(score) if return_mean else score
 
 
 def logP_pen(smiles, return_mean=True):
@@ -58,29 +49,22 @@ def logP_pen(smiles, return_mean=True):
     for mol in mols:
         cycle_list = nx.cycle_basis(nx.Graph(Chem.rdmolops.GetAdjacencyMatrix(mol)))
 
-        tmp = sum([len(c) > 6 for c in cycle_list])
+        tmp = sum(len(c) > 6 for c in cycle_list)
 
         logp_pen.append(Descriptors.MolLogP(mol) - sascorer.calculateScore(mol) - tmp)
 
-    if return_mean:
-        return np.mean(logp_pen)
-    else:
-        return logp_pen
+    return np.mean(logp_pen) if return_mean else logp_pen
 
 
 def logP(smiles, return_mean=True):
     mols = [Chem.MolFromSmiles(s) for s in smiles]
     clean_idx = [m is not None for m in mols]
     clean_idx = list(np.where(clean_idx)[0])
-    clean_mols = [mols[i] for i in clean_idx]
-    if len(clean_mols) > 0:
+    if clean_mols := [mols[i] for i in clean_idx]:
         score = [Chem.Crippen.MolLogP(mol) for mol in clean_mols]
     else:
         score = -10.0
-    if return_mean:
-        return np.mean(score)
-    else:
-        return score
+    return np.mean(score) if return_mean else score
 
 
 def qed(smiles, return_mean=True):
@@ -88,26 +72,16 @@ def qed(smiles, return_mean=True):
     clean_idx = [m is not None for m in mols]
     clean_idx = list(np.where(clean_idx)[0])
     clean_mols = [mols[i] for i in clean_idx]
-    if len(clean_mols) > 0:
-        score = [QED.qed(mol) for mol in clean_mols]
-    else:
-        score = -1.0
-    if return_mean:
-        return np.mean(score)
-    else:
-        return score
+    score = [QED.qed(mol) for mol in clean_mols] if clean_mols else -1.0
+    return np.mean(score) if return_mean else score
 
 
 def sa_score(smiles, return_mean=True):
     mols = [Chem.MolFromSmiles(s) for s in smiles]
     clean_idx = [m is not None for m in mols]
     clean_idx = list(np.where(clean_idx)[0])
-    clean_mols = [mols[i] for i in clean_idx]
-    if len(clean_mols) > 0:
+    if clean_mols := [mols[i] for i in clean_idx]:
         score = [sascorer.calculateScore(m) for m in clean_mols]
     else:
         score = -1.0
-    if return_mean:
-        return np.mean(score)
-    else:
-        return score
+    return np.mean(score) if return_mean else score

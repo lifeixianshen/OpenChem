@@ -47,10 +47,7 @@ class Graph:
         self.kekulize = kekulize
         self.addHs = addHs
         self.has_3D = has_3D
-        if from_rdmol:
-            self.smiles = Chem.MolToSmiles(mol)
-        else:
-            self.smiles = mol
+        self.smiles = Chem.MolToSmiles(mol) if from_rdmol else mol
         if from_rdmol:
             rdmol = mol
         else:
@@ -77,14 +74,14 @@ class Graph:
         adj_matrix = np.eye(self.num_nodes)
 
         self.edges = []
-        for _, bond in enumerate(rdmol.GetBonds()):
+        for bond in rdmol.GetBonds():
             cur_edge = Edge(bond, get_bond_attributes)
             self.edges.append(cur_edge)
             adj_matrix[cur_edge.begin_atom_idx, cur_edge.end_atom_idx] = 1.0
             adj_matrix[cur_edge.end_atom_idx, cur_edge.begin_atom_idx] = 1.0
         self.adj_matrix = np.zeros((max_size, max_size))
         self.adj_matrix[:self.num_nodes, :self.num_nodes] = adj_matrix
-        if get_bond_attributes is not None and len(self.edges) > 0:
+        if get_bond_attributes is not None and self.edges:
             tmp = self.edges[0]
             self.n_attr = len(tmp.attributes_dict.keys())
 
@@ -121,8 +118,8 @@ class Graph:
                 else:
                     cur_features += [edge.attributes_dict[cur_attr.name]]
             cur_features = np.array(cur_features)
-            attr_len = len(cur_features)
             if fl:
+                attr_len = len(cur_features)
                 edge_attr_adj_matrix = np.zeros((max_size, max_size, attr_len))
                 fl = False
             edge_attr_adj_matrix[begin, end, :] = cur_features
@@ -142,8 +139,9 @@ class Graph:
                     else:
                         cur_features += [node.attributes_dict[cur_attr.name]]
                 except:
-                    raise ValueError("Attribute name " + cur_attr.name + " encountered an invalid value: " +
-                          str(node.attributes_dict[cur_attr.name]) + " for molecule " + self.smiles)
+                    raise ValueError(
+                        f"Attribute name {cur_attr.name} encountered an invalid value: {str(node.attributes_dict[cur_attr.name])} for molecule {self.smiles}"
+                    )
             features.append(cur_features)
 
         features = np.array(features)

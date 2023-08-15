@@ -65,10 +65,7 @@ class GraphDataset(Dataset):
         elif file_format == "smi":
             data_set = read_smiles_property_file(filename, cols_to_read, delimiter)
             data = data_set[0]
-            if len(cols_to_read) == 1:
-                target = None
-            else:
-                target = data_set[1:]
+            target = None if len(cols_to_read) == 1 else data_set[1:]
             clean_smiles, clean_idx, num_atoms, max_len = sanitize_smiles(data,
                                                                           min_atoms=restrict_min_atoms,
                                                                           max_atoms=restrict_max_atoms,
@@ -80,10 +77,7 @@ class GraphDataset(Dataset):
             clean_smiles = [clean_smiles[i] for i in clean_idx]
             num_atoms = [num_atoms[i] for i in clean_idx]
             self.clean_idx = clean_idx
-            if target is not None:
-                self.target = target[clean_idx, :]
-            else:
-                self.target = None
+            self.target = target[clean_idx, :] if target is not None else None
             self.smiles = clean_smiles
             self.num_atoms_all = num_atoms
         else:
@@ -96,10 +90,7 @@ class GraphDataset(Dataset):
         self.get_bond_attributes = get_bond_attributes
 
     def __len__(self):
-        if self.has_3D:
-            return len(self.rd_mols)
-        else:
-            return len(self.smiles)
+        return len(self.rd_mols) if self.has_3D else len(self.smiles)
 
     def __getitem__(self, index):
         
@@ -128,37 +119,36 @@ class GraphDataset(Dataset):
                     'labels': self.target[index].astype('float32'),
                     'xyz': graph.xyz#graph.xyz#(graph.xyz - mean_coord) / std_coord
                 }
-            elif self.target is None and not self.return_smiles:
+            elif not self.return_smiles:
                 sample = {
                     'adj_matrix': adj_matrix.astype('float32'),
                     'node_feature_matrix': node_feature_matrix.astype('float32'),
                     'xyz': graph.xyz  # graph.xyz#(graph.xyz - mean_coord) / std_coord
                 }
-            elif self.return_smiles:
+            else:
                 sample = {
                     'adj_matrix': adj_matrix.astype('float32'),
                     'node_feature_matrix': node_feature_matrix.astype('float32'),
                     'xyz': graph.xyz,
                     'object': object
                 }
+        elif self.target is not None:
+            sample = {
+                'adj_matrix': adj_matrix.astype('float32'),
+                'node_feature_matrix': node_feature_matrix.astype('float32'),
+                'labels': self.target[index].astype('float32')
+            }
+        elif not self.return_smiles:
+            sample = {
+                'adj_matrix': adj_matrix.astype('float32'),
+                'node_feature_matrix': node_feature_matrix.astype('float32'),
+            }
         else:
-            if self.target is not None:
-                sample = {
-                    'adj_matrix': adj_matrix.astype('float32'),
-                    'node_feature_matrix': node_feature_matrix.astype('float32'),
-                    'labels': self.target[index].astype('float32')
-                }
-            elif self.target is None and not self.return_smiles:
-                sample = {
-                    'adj_matrix': adj_matrix.astype('float32'),
-                    'node_feature_matrix': node_feature_matrix.astype('float32'),
-                }
-            elif self.return_smiles:
-                sample = {
-                    'adj_matrix': adj_matrix.astype('float32'),
-                    'node_feature_matrix': node_feature_matrix.astype('float32'),
-                    'object': np.array(object)
-                }
+            sample = {
+                'adj_matrix': adj_matrix.astype('float32'),
+                'node_feature_matrix': node_feature_matrix.astype('float32'),
+                'object': np.array(object)
+            }
         return sample
 
 

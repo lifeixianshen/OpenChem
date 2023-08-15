@@ -78,10 +78,7 @@ class SmilesIterator(Iterator):
 
         self.x = np.asarray(x)
 
-        if y is not None:
-            self.y = np.asarray(y)
-        else:
-            self.y = None
+        self.y = np.asarray(y) if y is not None else None
         self.smiles_data_generator = smiles_data_generator
         self.dtype = dtype
         super(SmilesIterator, self).__init__(x.shape[0], batch_size, shuffle, seed)
@@ -95,7 +92,7 @@ class SmilesIterator(Iterator):
         # the indexing of each batch.
         with self.lock:
             index_array, current_index, current_batch_size =\
-                next(self.index_generator)
+                    next(self.index_generator)
         # The transformation of images is not under thread lock
         # so it can be done in parallel
         batch_x = np.zeros(tuple([current_batch_size] +
@@ -106,10 +103,7 @@ class SmilesIterator(Iterator):
             x = self.smiles_data_generator.transform(smiles)
             batch_x[i] = x
 
-        if self.y is None:
-            return batch_x
-        batch_y = self.y[index_array]
-        return batch_x, batch_y
+        return batch_x if self.y is None else (batch_x, self.y[index_array])
 
 
 class SmilesEnumerator(object):
@@ -146,8 +140,8 @@ class SmilesEnumerator(object):
     def charset(self, charset):
         self._charset = charset
         self._charlen = len(charset)
-        self._char_to_int = dict((c, i) for i, c in enumerate(charset))
-        self._int_to_char = dict((i, c) for i, c in enumerate(charset))
+        self._char_to_int = {c: i for i, c in enumerate(charset)}
+        self._int_to_char = dict(enumerate(charset))
 
     def fit(self, smiles, extra_chars=[], extra_pad=5):
         """Performs extraction of the charset and length of a SMILES datasets
@@ -161,7 +155,7 @@ class SmilesEnumerator(object):
         """
         charset = set("".join(list(smiles)))
         self.charset = "".join(charset.union(set(extra_chars)))
-        self.pad = max([len(smile) for smile in smiles]) + extra_pad
+        self.pad = max(len(smile) for smile in smiles) + extra_pad
 
     def randomize_smiles(self, smiles):
         """Perform a randomization of a SMILES string
@@ -222,10 +216,10 @@ if __name__ == "__main__":
     if len(set(transformed)) < 3: print("Too few enumerated SMILES generated")
 
     # Reconstruction
-    reconstructed = sm_en.reverse_transform(v[0:5])
+    reconstructed = sm_en.reverse_transform(v[:5])
     for i, smile in enumerate(reconstructed):
         if smile != smiles[i]:
-            print("Error in reconstruction %s %s" % (smile, smiles[i]))
+            print(f"Error in reconstruction {smile} {smiles[i]}")
             break
 
     # test Pandas

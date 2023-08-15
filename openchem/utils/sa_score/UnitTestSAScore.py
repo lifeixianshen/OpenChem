@@ -31,6 +31,6 @@ if __name__ == '__main__':
         for methName in dir(TestCase):
             if re.match('_test', methName):
                 newName = re.sub('_test', 'test', methName)
-                exec('TestCase.%s = TestCase.%s' % (newName, methName))
+                exec(f'TestCase.{newName} = TestCase.{methName}')
 
     unittest.main()

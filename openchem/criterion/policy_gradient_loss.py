@@ -25,9 +25,6 @@ class PolicyGradientLoss(_Loss):
         log_policy = input["log_policy"]
         sizes = input["sizes"]
         trajectories = input["smiles"]
-        adj = input["adj"]
-        classes = input["classes"]
-
         device = log_policy.device
         len_trajectory = max(sizes)
         batch_size = len(sizes)
@@ -62,6 +59,9 @@ class PolicyGradientLoss(_Loss):
             structure_reward = torch.zeros((batch_size, len_trajectory),
                                            dtype=log_policy.dtype,
                                            device=log_policy.device)
+            adj = input["adj"]
+            classes = input["classes"]
+
             for i in range(batch_size):
                 atom_bonds = torch.from_numpy(adj[i]).sum(dim=0)
                 cl = torch.cat([torch.tensor([0], dtype=torch.long), classes[i]])
@@ -72,7 +72,7 @@ class PolicyGradientLoss(_Loss):
                 #     (atom_bonds <= max_atom_bonds).to(
                 #         dtype=torch.float, device=device)
                 structure_reward[i, :sizes[i]] = \
-                    -15. * (atom_bonds > max_atom_bonds).to(
+                        -15. * (atom_bonds > max_atom_bonds).to(
                         dtype=torch.float, device=device)
 
             structure_reward = pack_padded_sequence(structure_reward, sizes, batch_first=True).data

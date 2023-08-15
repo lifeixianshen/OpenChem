@@ -27,7 +27,7 @@ labels = labels.T
 
 from openchem.data.utils import get_tokens
 tokens, _, _ = get_tokens(smiles)
-tokens = tokens + ' '
+tokens = f'{tokens} '
 
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(smiles, labels, test_size=0.2,

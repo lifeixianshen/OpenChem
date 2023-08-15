@@ -31,9 +31,7 @@ class StackAugmentation(nn.Module):
         a_push, a_pop, a_no_op = controls[:, 0], controls[:, 1], controls[:, 2]
         stack_down = torch.cat((prev_stack[:, 1:], zeros_at_the_bottom), dim=1)
         stack_up = torch.cat((stack_input, prev_stack[:, :-1]), dim=1)
-        new_stack = a_no_op * prev_stack + a_push * stack_up + \
-                    a_pop * stack_down
-        return new_stack
+        return a_no_op * prev_stack + a_push * stack_up + a_pop * stack_down
 
     def init_stack(self, batch_size):
         result = torch.zeros(batch_size, self.stack_depth, self.stack_width)

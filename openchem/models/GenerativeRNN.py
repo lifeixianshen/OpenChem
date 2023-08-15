@@ -30,10 +30,7 @@ class GenerativeRNN(OpenChemModel):
         inp = self.Embedding(inp)
 
         if self.has_stack:
-            if self.encoder_params['layer'] == 'LSTM':
-                hidden_ = hidden[0]
-            else:
-                hidden_ = hidden
+            hidden_ = hidden[0] if self.encoder_params['layer'] == 'LSTM' else hidden
             hidden_2_stack = hidden_.squeeze(0)
             stack = self.Stack(hidden_2_stack, stack)
             stack_top = stack[:, 0, :].unsqueeze(1)
@@ -94,7 +91,7 @@ class GenerativeRNN(OpenChemModel):
                                                  stack)
         inp = prime_input[:, -1]
 
-        for p in range(max_len):
+        for _ in range(max_len):
             output, hidden, stack = self.forward_step(inp, hidden, stack)
             # Sample from the network as a multinomial distribution
             probs = torch.softmax(output, dim=1).detach()

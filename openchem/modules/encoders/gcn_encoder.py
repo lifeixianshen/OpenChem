@@ -12,10 +12,7 @@ class GraphCNNEncoder(OpenChemEncoder):
         check_params(params, self.get_required_params(), self.get_optional_params())
         self.n_layers = params['n_layers']
         self.hidden_size = params['hidden_size']
-        if 'dropout' in params.keys():
-            self.dropout = params['dropout']
-        else:
-            self.dropout = 0
+        self.dropout = params['dropout'] if 'dropout' in params.keys() else 0
         assert len(self.hidden_size) == self.n_layers
         self.hidden_size = [self.input_size] + self.hidden_size
         self.graph_convolutions = nn.ModuleList()

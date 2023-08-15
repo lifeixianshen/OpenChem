@@ -50,10 +50,11 @@ class SmilesProteinDataset(Dataset):
         return len(self.target)
 
     def __getitem__(self, index):
-        sample = {'tokenized_smiles': self.molecules[index],
-                  'tokenized_protein': self.proteins[index],
-                  'labels': self.target[index],
-                  'mol_length': self.mol_lengths[index],
-                  'prot_length': self.prot_lengths[index]}
-        return sample
+        return {
+            'tokenized_smiles': self.molecules[index],
+            'tokenized_protein': self.proteins[index],
+            'labels': self.target[index],
+            'mol_length': self.mol_lengths[index],
+            'prot_length': self.prot_lengths[index],
+        }
 
