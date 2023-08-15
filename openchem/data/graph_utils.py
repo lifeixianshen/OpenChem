@@ -18,9 +18,9 @@ def bfs_seq(G, start_id, return_bfs=False):
     dictionary = dict(nx.bfs_successors(G, start_id))
     start = [start_id]
     output = [start_id]
-    while len(start) > 0:
+    while start:
         next = []
-        while len(start) > 0:
+        while start:
             current = start.pop(0)
             neighbor = dictionary.get(current)
             if neighbor is not None:
@@ -29,24 +29,21 @@ def bfs_seq(G, start_id, return_bfs=False):
                 next = next + neighbor
         output = output + next
         start = next
-    if return_bfs:
-        remap = {}
-        for i in range(len(output)):
-            remap[output[i]] = i
-        bfs_dict = {}
-        for key in dictionary.keys():
-            bfs_dict[remap[key]] = []
-            for j in range(len(dictionary[key])):
-                bfs_dict[remap[key]].append(remap[dictionary[key][j]])
-        nodes = list(range(len(output)))
-        parents = list(np.zeros(len(nodes), dtype="int"))
-        zeros_neighb = []
-        for key in bfs_dict.keys():
-            for j in range(len(bfs_dict[key])):
-                parents[bfs_dict[key][j]] = key
-        return output, nodes, parents, bfs_dict
-    else:
+    if not return_bfs:
         return output
+    remap = {output[i]: i for i in range(len(output))}
+    bfs_dict = {}
+    for key, value in dictionary.items():
+        bfs_dict[remap[key]] = []
+        for j in range(len(value)):
+            bfs_dict[remap[key]].append(remap[dictionary[key][j]])
+    nodes = list(range(len(output)))
+    parents = list(np.zeros(len(nodes), dtype="int"))
+    zeros_neighb = []
+    for key, value_ in bfs_dict.items():
+        for j in range(len(value_)):
+            parents[bfs_dict[key][j]] = key
+    return output, nodes, parents, bfs_dict
 
 
 def encode_adj(adj, max_prev_node=10, is_full=False):

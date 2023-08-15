@@ -66,12 +66,6 @@ class GRUPlain(nn.Module):
         output_raw, self.hidden = self.rnn(input, self.hidden)
         if pack:
             output_raw = pad_packed_sequence(output_raw, batch_first=True)[0]
-        if self.has_output:
-            output = self.output(output_raw)
-        else:
-            output = output_raw
+        output = self.output(output_raw) if self.has_output else output_raw
         # return hidden state at each time step
-        if return_output_raw:
-            return output, output_raw
-        else:
-            return output
+        return (output, output_raw) if return_output_raw else output

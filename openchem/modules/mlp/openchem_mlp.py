@@ -20,10 +20,7 @@ class OpenChemMLP(nn.Module):
             assert len(self.activation) == self.n_layers
         else:
             self.activation = [self.activation] * self.n_layers
-        if 'dropout' in self.params.keys():
-            self.dropout = self.params['dropout']
-        else:
-            self.dropout = 0
+        self.dropout = self.params['dropout'] if 'dropout' in self.params.keys() else 0
         self.layers = nn.ModuleList([])
         self.bn = nn.ModuleList([])
         self.dropouts = nn.ModuleList([])
@@ -81,14 +78,13 @@ class OpenChemMLPSimple(nn.Module):
             self.layers.append(nn.Linear(in_features=self.input_size[i], out_features=self.hidden_size[i]))
 
         if "init" in self.params.keys():
-            if self.params["init"] == "xavier_uniform":
-                for m in self.modules():
-                    if isinstance(m, nn.Linear):
-                        nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain('relu'))
-            else:
+            if self.params["init"] != "xavier_uniform":
                 raise NotImplementedError("Only xavier_uniform "
                                           "initialization is "
                                           "supported now in OpenChemMLPSimple")
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain('relu'))
 
     @staticmethod
     def get_required_params():

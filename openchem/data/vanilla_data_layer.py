@@ -16,5 +16,4 @@ class VanillaDataset(object):
         return len(self.target)
 
     def __getitem__(self, index):
-        sample = {'tokenized_smiles': self.data[index], 'labels': self.target[index]}
-        return sample
+        return {'tokenized_smiles': self.data[index], 'labels': self.target[index]}

@@ -31,8 +31,7 @@ def move_to_cuda(sample):
 def get_latest_checkpoint(path):
     if os.path.isdir(path) and os.listdir(path) != []:
         list_of_files = glob.glob(os.path.join(path, '*'))
-        latest_file = max(list_of_files, key=os.path.getctime)
-        return latest_file
+        return max(list_of_files, key=os.path.getctime)
     else:
         return None
 
@@ -51,11 +50,10 @@ def flatten_dict(dct):
     # github.com/NVIDIA/OpenSeq2Seq/blob/master/open_seq2seq/utils/utils.py
     flat_dict = {}
     for key, value in dct.items():
-        if isinstance(value, int) or isinstance(value, float) or \
-           isinstance(value, string_types) or isinstance(value, bool):
-            flat_dict.update({key: value})
+        if isinstance(value, (int, float, string_types, bool)):
+            flat_dict[key] = value
         elif isinstance(value, dict):
-            flat_dict.update({key + '/' + k: v for k, v in flatten_dict(dct[key]).items()})
+            flat_dict |= {f'{key}/{k}': v for k, v in flatten_dict(dct[key]).items()}
     return flat_dict
 
 
@@ -78,13 +76,10 @@ def nested_update(org_dict, upd_dict):
     # copy-pasted from
     # github.com/NVIDIA/OpenSeq2Seq/blob/master/open_seq2seq/utils/utils.py
     for key, value in upd_dict.items():
-        if isinstance(value, dict):
-            if key in org_dict:
-                if not isinstance(org_dict[key], dict):
-                    raise ValueError("Mismatch between org_dict and upd_dict " "at node {}".format(key))
-                nested_update(org_dict[key], value)
-            else:
-                org_dict[key] = value
+        if isinstance(value, dict) and key in org_dict:
+            if not isinstance(org_dict[key], dict):
+                raise ValueError(f"Mismatch between org_dict and upd_dict at node {key}")
+            nested_update(org_dict[key], value)
         else:
             org_dict[key] = value
 
@@ -111,25 +106,24 @@ def check_params(config, required_dict, optional_dict):
 
     for pm, vals in required_dict.items():
         if pm not in config:
-            raise ValueError("{} parameter has to be specified".format(pm))
-        else:
-            if vals == str:
-                vals = string_types
-            if vals and isinstance(vals, list) and config[pm] not in vals:
-                raise ValueError("{} has to be one of {}".format(pm, vals))
-            if vals and not isinstance(vals, list) and \
+            raise ValueError(f"{pm} parameter has to be specified")
+        if vals == str:
+            vals = string_types
+        if vals and isinstance(vals, list) and config[pm] not in vals:
+            raise ValueError(f"{pm} has to be one of {vals}")
+        if vals and not isinstance(vals, list) and \
                     not isinstance(config[pm], vals):
-                raise ValueError("{} has to be of type {}".format(pm, vals))
+            raise ValueError(f"{pm} has to be of type {vals}")
 
     for pm, vals in optional_dict.items():
         if vals == str:
             vals = string_types
         if pm in config:
             if vals and isinstance(vals, list) and config[pm] not in vals:
-                raise ValueError("{} has to be one of {}".format(pm, vals))
+                raise ValueError(f"{pm} has to be one of {vals}")
             if vals and not isinstance(vals, list) and \
                     not isinstance(config[pm], vals):
-                raise ValueError("{} has to be of type {}".format(pm, vals))
+                raise ValueError(f"{pm} has to be of type {vals}")
 
     # for pm in config:
     #     if pm not in required_dict and pm not in optional_dict:

@@ -197,11 +197,12 @@ def main():
             current_env["RANK"] = str(dist_rank)
 
             # spawn the processes
-            cmd = ["python",
-                   "-u",
-                   args.training_script,
-                   "--local_rank={}".format(local_rank)] + \
-                args.training_script_args
+            cmd = [
+                "python",
+                "-u",
+                args.training_script,
+                f"--local_rank={local_rank}",
+            ] + args.training_script_args
 
             process = subprocess.Popen(cmd, env=current_env)
             processes.append(process)
@@ -214,10 +215,12 @@ def main():
                 process.terminate()
 
     elif args.nproc_per_node == 1:
-        cmd = ["python",
-               "-u",
-               args.training_script,
-               "--local_rank={}".format(-1)] + args.training_script_args
+        cmd = [
+            "python",
+            "-u",
+            args.training_script,
+            '--local_rank=-1',
+        ] + args.training_script_args
         process = subprocess.Popen(cmd, env=current_env)
 
         try:

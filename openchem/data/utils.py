@@ -75,11 +75,9 @@ def seq2tensor(seqs, tokens, flip=True):
     tensor = np.zeros((len(seqs), len(seqs[0])))
     for i in range(len(seqs)):
         for j in range(len(seqs[i])):
-            if seqs[i][j] in tokens:
-                tensor[i, j] = tokens.index(seqs[i][j])
-            else:
+            if seqs[i][j] not in tokens:
                 tokens = tokens + seqs[i][j]
-                tensor[i, j] = tokens.index(seqs[i][j])
+            tensor[i, j] = tokens.index(seqs[i][j])
     if flip:
         tensor = np.flip(tensor, axis=1).copy()
     return tensor, tokens
@@ -99,14 +97,14 @@ def pad_sequences(seqs, max_length=None, pad_symbol=' '):
 
 
 def create_loader(dataset, batch_size, shuffle=True, num_workers=1, pin_memory=False, sampler=None):
-    data_loader = DataLoader(dataset=dataset,
-                             batch_size=batch_size,
-                             shuffle=shuffle,
-                             num_workers=num_workers,
-                             pin_memory=pin_memory,
-                             sampler=sampler)
-
-    return data_loader
+    return DataLoader(
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        sampler=sampler,
+    )
 
 
 def sanitize_smiles(smiles,
@@ -151,10 +149,10 @@ def sanitize_smiles(smiles,
         sm_new = Chem.MolToSmiles(mol) if canonize and mol is not None else sm
         good = mol is not None
         if good and allowed_tokens is not None:
-            good &= all([t in allowed_tokens for t in sm_new])
+            good &= all(t in allowed_tokens for t in sm_new)
 
         if good and not allow_charges:
-            good &= all([a.GetFormalCharge() == 0 for a in mol.GetAtoms()])
+            good &= all(a.GetFormalCharge() == 0 for a in mol.GetAtoms())
 
         if good:
             n = mol.GetNumAtoms()
@@ -174,7 +172,7 @@ def sanitize_smiles(smiles,
 
     smiles_set = set(new_smiles)
     num_unique = len(smiles_set) - ('' in smiles_set)
-    if len(idx) > 0:
+    if idx:
         valid_unique_rate = float(num_unique) / len(idx)
         invalid_rate = 1.0 - float(len(idx)) / len(smiles)
     else:
@@ -190,9 +188,9 @@ def sanitize_smiles(smiles,
 
     if return_num_atoms and return_max_len:
         return new_smiles, idx, num_atoms, max(smiles_lens)
-    elif return_num_atoms and not return_max_len:
+    elif return_num_atoms:
         return new_smiles, idx, num_atoms
-    elif not return_num_atoms and return_max_len:
+    elif return_max_len:
         return new_smiles, idx, max(smiles_lens)
     else:
         return new_smiles, idx
@@ -242,14 +240,10 @@ def save_smi_to_file(filename, smiles, unique=True):
             success (bool): defines whether operation
             was successfully completed or not.
        """
-    if unique:
-        smiles = list(set(smiles))
-    else:
-        smiles = list(smiles)
-    f = open(filename, 'w')
-    for mol in smiles:
-        f.writelines([mol, '\n'])
-    f.close()
+    smiles = list(set(smiles)) if unique else list(smiles)
+    with open(filename, 'w') as f:
+        for mol in smiles:
+            f.writelines([mol, '\n'])
     return f.closed
 
 
@@ -266,15 +260,9 @@ def read_smi_file(filename, unique=True):
         was successfully completed or not.
     If 'unique=True' this list contains only unique copies.
     """
-    f = open(filename, 'r')
-    molecules = []
-    for line in f:
-        molecules.append(line[:-1])
-    if unique:
-        molecules = list(set(molecules))
-    else:
-        molecules = list(molecules)
-    f.close()
+    with open(filename, 'r') as f:
+        molecules = [line[:-1] for line in f]
+        molecules = list(set(molecules)) if unique else list(molecules)
     return molecules, f.closed
 
 
@@ -295,7 +283,7 @@ def get_tokens(smiles, tokens=None):
         tokens = list(set(''.join(smiles)))
         tokens = sorted(tokens)
         tokens = ''.join(tokens)
-    token2idx = dict((token, i) for i, token in enumerate(tokens))
+    token2idx = {token: i for i, token in enumerate(tokens)}
     num_tokens = len(tokens)
     return tokens, token2idx, num_tokens
 
@@ -324,27 +312,21 @@ def time_since(since):
 def read_smiles_property_file(path, cols_to_read, delimiter=',', keep_header=False):
     reader = csv.reader(open(path, 'r'), delimiter=delimiter)
     data = list(reader)
-    if keep_header:
-        start_position = 0
-    else:
-        start_position = 1
+    start_position = 0 if keep_header else 1
     assert len(data) > start_position
     data = map(list, zip(*data))
-    data = [d for c, d in enumerate(data)]
-    data_ = [data[c][start_position:] for c in cols_to_read]
-
-    return data_
+    data = list(data)
+    return [data[c][start_position:] for c in cols_to_read]
 
 
 def save_smiles_property_file(path, smiles, labels, delimiter=','):
-    f = open(path, 'w')
-    n_targets = labels.shape[1]
-    for i in range(len(smiles)):
-        f.writelines(smiles[i])
-        for j in range(n_targets):
-            f.writelines(delimiter + str(labels[i, j]))
-        f.writelines('\n')
-    f.close()
+    with open(path, 'w') as f:
+        n_targets = labels.shape[1]
+        for i in range(len(smiles)):
+            f.writelines(smiles[i])
+            for j in range(n_targets):
+                f.writelines(delimiter + str(labels[i, j]))
+            f.writelines('\n')
 
 
 def process_smiles(smiles,

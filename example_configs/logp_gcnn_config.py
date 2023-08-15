@@ -20,24 +20,24 @@ import pickle
 
 
 def get_atomic_attributes(atom):
-    attr_dict = {}
-  
     atomic_num = atom.GetAtomicNum()
     atomic_mapping = {5: 0, 7: 1, 6: 2, 8: 3, 9: 4, 15: 5, 16: 6, 17: 7, 35: 8,
                       53: 9}
-    if atomic_num in atomic_mapping.keys():
-        attr_dict['atom_element'] = atomic_mapping[atomic_num]
-    else:
-        attr_dict['atom_element'] = 10
-    attr_dict['valence'] = atom.GetTotalValence()
+    attr_dict = {
+        'atom_element': atomic_mapping.get(atomic_num, 10),
+        'valence': atom.GetTotalValence(),
+    }
     attr_dict['charge'] = atom.GetFormalCharge()
     attr_dict['hybridization'] = atom.GetHybridization().real
     attr_dict['aromatic'] = int(atom.GetIsAromatic())
     return attr_dict
 
 
-node_attributes = {}
-node_attributes['valence'] = Attribute('node', 'valence', one_hot=True, values=[1, 2, 3, 4, 5, 6])
+node_attributes = {
+    'valence': Attribute(
+        'node', 'valence', one_hot=True, values=[1, 2, 3, 4, 5, 6]
+    )
+}
 node_attributes['charge'] = Attribute('node', 'charge', one_hot=True, values=[-1, 0, 1, 2, 3, 4])
 node_attributes['hybridization'] = Attribute('node', 'hybridization',
                                              one_hot=True, values=[0, 1, 2, 3, 4, 5, 6, 7])

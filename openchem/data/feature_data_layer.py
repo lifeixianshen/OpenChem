@@ -33,15 +33,14 @@ class FeatureDataset(Dataset):
         self.return_smiles = return_smiles
         self.get_features = get_features
         data = read_smiles_property_file(filename, cols_to_read, delimiter)
+        smiles = data[0]
         if len(cols_to_read) > 1:
             assert len(cols_to_read) == len(data)
-            smiles = data[0]
             target = np.array(data[1:], dtype='float')
             target = target.T
             num_targets = len(cols_to_read) - 1
             target = target.reshape((-1, num_targets))
         else:
-            smiles = data[0]
             target = None
         self.target = target
         features, valid_idx, invalid_idx = get_features(smiles, **get_features_args)

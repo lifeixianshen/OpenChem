@@ -43,22 +43,18 @@ class SmilesDataset(Dataset):
         self.tokenize = tokenize
         self.return_smiles = return_smiles
         data = read_smiles_property_file(filename, cols_to_read, delimiter)
+        smiles = data[0]
         if len(cols_to_read) > 1:
             assert len(cols_to_read) == len(data)
-            smiles = data[0]
             target = np.array(data[1:], dtype='float')
             target = target.T
             num_targets = len(cols_to_read) - 1
             target = target.reshape((-1, num_targets))
         else:
-            smiles = data[0]
             target = None
-        if sanitize:
-            sanitized = False
-        else:
-            sanitized = True
+        sanitized = not sanitize
         self.data, self.target, self.length, \
-            self.tokens, self.token2idx, self.num_tokens = process_smiles(
+                self.tokens, self.token2idx, self.num_tokens = process_smiles(
             smiles, sanitized=sanitized, target=target, augment=augment, pad=pad,
             tokenize=tokenize, tokens=tokens, flip=flip)
 

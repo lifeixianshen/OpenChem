@@ -14,17 +14,14 @@ class GraphEdgeAttentionEncoder(OpenChemEncoder):
         self.attr_size = params['edge_attr_sizes']
         self.attr_dim = sum(self.attr_size)
         self.hidden_size = params['hidden_size']
-        if 'dropout' in params.keys():
-            self.dropout = params['dropout']
-        else:
-            self.dropout = 0
+        self.dropout = params['dropout'] if 'dropout' in params.keys() else 0
         assert len(self.hidden_size) == self.n_layers
         self.hidden_size = [self.input_size] + self.hidden_size
         self.graph_conv = nn.ModuleList()
         self.dropout_layer = nn.Dropout(p=self.dropout)
         self.dense = nn.Linear(in_features=self.hidden_size[-1], out_features=self.encoder_dim)
         for i in range(1, self.n_layers + 1):
-            for j in range(self.attr_dim):
+            for _ in range(self.attr_dim):
                 self.graph_conv.append(GraphConvolution(self.hidden_size[i - 1], self.hidden_size[i]))
 
     @staticmethod

@@ -14,5 +14,4 @@ class OneHotEmbedding(OpenChemEmbedding):
         self.weight = torch.nn.Parameter(weight, requires_grad=False)
 
     def forward(self, inp):
-        embedded = self.weight[inp]
-        return embedded
+        return self.weight[inp]

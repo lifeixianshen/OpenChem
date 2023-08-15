@@ -28,8 +28,7 @@ class MLP2Label(OpenChemModel):
             self.eval()
         else:
             self.train()
-        output = self.MLP(inp)
-        return output
+        return self.MLP(inp)
 
     @staticmethod
     def cast_inputs(sample, task, use_cuda, for_prediction=False):

@@ -12,8 +12,7 @@ class Embedding(OpenChemEmbedding):
                                       padding_idx=self.padding_idx)
 
     def forward(self, inp):
-        embedded = self.embedding(inp)
-        return embedded
+        return self.embedding(inp)
 
     @staticmethod
     def get_required_params():

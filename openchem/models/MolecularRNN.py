@@ -488,7 +488,7 @@ class MolecularRNNModel(OpenChemModel):
                 if p in path:
                     prefix = p
             assert prefix is not None
-            params = {prefix + "." + k: v for k, v in params.items()}
+            params = {f"{prefix}.{k}": v for k, v in params.items()}
             params_old.update(params)
 
         params_new = OrderedDict()
@@ -498,7 +498,7 @@ class MolecularRNNModel(OpenChemModel):
                 if k.startswith(po):
                     kn = pn + k[len(po):]
             if kn is None:
-                raise AttributeError("Failed to map old key {}".format(k))
+                raise AttributeError(f"Failed to map old key {k}")
             params_new[kn] = v
         if len(params_new) != len(self.state_dict()):
             raise AttributeError("Incomplete mapping of old to new keys")
